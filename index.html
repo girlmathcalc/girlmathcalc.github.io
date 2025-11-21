@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#fbc2eb">
+    <meta name="description" content="The only calculator you need to justify your spending.">
+    <title>Girl Math Calculator</title>
+    
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icon (iOS support) -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        /* Button Styles */
+        .calc-btn {
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.2), 0 2px 4px -1px rgba(236, 72, 153, 0.1);
+        }
+        .calc-btn:active {
+            transform: scale(0.95);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #db2777;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #db2777;
+        }
+        
+        /* Animation for text change */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Text resizing classes */
+        .text-mode {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #db2777;
+            white-space: normal;
+            line-height: 1.2;
+        }
+        .number-mode {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        @media (min-width: 640px) {
+            .number-mode { font-size: 3.5rem; }
+            .text-mode { font-size: 1.75rem; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 select-none">
+
+    <!-- Main Calculator Container -->
+    <div class="glass-panel w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col h-[90vh] max-h-[800px]">
+        
+        <!-- Header / Mode Toggle -->
+        <div class="p-6 pb-2 flex justify-between items-center">
+            <div class="flex flex-col">
+                <span class="text-xs font-bold text-pink-500 uppercase tracking-widest">Mode</span>
+                <span id="mode-text" class="text-pink-600 font-bold text-lg">Standard</span>
+            </div>
+            
+            <div class="relative inline-block w-14 mr-2 align-middle select-none transition duration-200 ease-in">
+                <input type="checkbox" name="toggle" id="girl-math-toggle" class="toggle-checkbox absolute block w-7 h-7 rounded-full bg-white border-4 border-pink-200 appearance-none cursor-pointer transition-all duration-300 ease-in-out shadow-sm z-10 top-0 left-0"/>
+                <label for="girl-math-toggle" class="toggle-label block overflow-hidden h-7 rounded-full bg-pink-200 cursor-pointer transition-colors duration-300 ease-in-out"></label>
+            </div>
+        </div>
+
+        <!-- Display Screen -->
+        <div class="px-6 py-4 text-right flex flex-col justify-end flex-grow min-h-[180px]">
+            <!-- Previous Input -->
+            <div id="prev-input" class="text-pink-400 text-sm min-h-[1.5rem] font-semibold tracking-wide opacity-70 truncate mb-2"></div>
+            
+            <!-- Main Display (Number or Text) -->
+            <div id="display" class="number-mode break-words transition-all duration-200 py-2">0</div>
+        </div>
+
+        <!-- Keypad -->
+        <div class="bg-white/60 p-6 rounded-t-[2.5rem] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+            <div class="grid grid-cols-4 gap-3 sm:gap-4">
+                <!-- Row 1 -->
+                <button onclick="clearDisplay()" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-100 text-pink-600 font-bold text-xl flex items-center justify-center hover:bg-pink-200">AC</button>
+                <button onclick="deleteChar()" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-100 text-pink-600 font-bold text-xl flex items-center justify-center hover:bg-pink-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                </button>
+                <button onclick="appendOperator('%')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-100 text-pink-600 font-bold text-xl flex items-center justify-center hover:bg-pink-200">%</button>
+                <button onclick="appendOperator('/')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-300 text-white font-bold text-2xl flex items-center justify-center hover:bg-pink-400 shadow-pink-300/50">÷</button>
+
+                <!-- Row 2 -->
+                <button onclick="appendNumber('7')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">7</button>
+                <button onclick="appendNumber('8')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">8</button>
+                <button onclick="appendNumber('9')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">9</button>
+                <button onclick="appendOperator('*')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-300 text-white font-bold text-2xl flex items-center justify-center hover:bg-pink-400 shadow-pink-300/50">×</button>
+
+                <!-- Row 3 -->
+                <button onclick="appendNumber('4')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">4</button>
+                <button onclick="appendNumber('5')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">5</button>
+                <button onclick="appendNumber('6')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">6</button>
+                <button onclick="appendOperator('-')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-300 text-white font-bold text-2xl flex items-center justify-center hover:bg-pink-400 shadow-pink-300/50">-</button>
+
+                <!-- Row 4 -->
+                <button onclick="appendNumber('1')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">1</button>
+                <button onclick="appendNumber('2')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">2</button>
+                <button onclick="appendNumber('3')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">3</button>
+                <button onclick="appendOperator('+')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-pink-300 text-white font-bold text-2xl flex items-center justify-center hover:bg-pink-400 shadow-pink-300/50">+</button>
+
+                <!-- Row 5 -->
+                <button onclick="appendNumber('0')" class="calc-btn col-span-2 rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">0</button>
+                <button onclick="appendNumber('.')" class="calc-btn col-span-1 aspect-square rounded-2xl bg-white text-gray-600 font-semibold text-2xl flex items-center justify-center hover:bg-gray-50">.</button>
+                <button onclick="calculate()" class="calc-btn col-span-1 aspect-square rounded-2xl bg-gradient-to-br from-pink-500 to-pink-600 text-white font-bold text-2xl flex items-center justify-center hover:from-pink-600 hover:to-pink-700 shadow-lg shadow-pink-500/40">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Error', err));
+            });
+        }
+
+        let currentInput = '';
+        let previousInput = '';
+        let operator = undefined;
+        let isGirlMath = false;
+        let resetScreen = false;
+        let lastOpForContext = null;
+        let lastOperandForContext = null;
+
+        const displayElement = document.getElementById('display');
+        const prevInputElement = document.getElementById('prev-input');
+        const toggleElement = document.getElementById('girl-math-toggle');
+        const modeTextElement = document.getElementById('mode-text');
+
+        toggleElement.addEventListener('change', (e) => {
+            isGirlMath = e.target.checked;
+            if (isGirlMath) {
+                modeTextElement.innerText = "Girl Math ✨";
+                modeTextElement.classList.add("text-pink-600");
+                document.body.style.background = "linear-gradient(135deg, #fbc2eb 0%, #f687b3 100%)";
+                if (resetScreen && currentInput !== '') updateDisplay(true);
+            } else {
+                modeTextElement.innerText = "Standard";
+                modeTextElement.classList.remove("text-pink-600");
+                document.body.style.background = "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)";
+                if (resetScreen && currentInput !== '') updateDisplay(false);
+            }
+        });
+
+        function appendNumber(number) {
+            if (resetScreen) {
+                currentInput = '';
+                resetScreen = false;
+                lastOpForContext = null;
+                lastOperandForContext = null;
+            }
+            if (number === '.' && currentInput.includes('.')) return;
+            if (currentInput === '0' && number !== '.') {
+                currentInput = number;
+            } else {
+                currentInput = currentInput.toString() + number.toString();
+            }
+            updateDisplay(false);
+        }
+
+        function appendOperator(op) {
+            if (currentInput === '' && previousInput !== '') {
+                operator = op;
+                updateDisplay(false);
+                return;
+            }
+            if (currentInput === '') return;
+            if (previousInput !== '') calculate(true);
+            operator = op;
+            previousInput = currentInput;
+            currentInput = '';
+            resetScreen = false;
+            updateDisplay(false);
+        }
+
+        function deleteChar() {
+            if (resetScreen) {
+                clearDisplay();
+                return;
+            }
+            currentInput = currentInput.toString().slice(0, -1);
+            if(currentInput === '') currentInput = '0';
+            updateDisplay(false);
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            previousInput = '';
+            operator = undefined;
+            resetScreen = false;
+            lastOpForContext = null;
+            lastOperandForContext = null;
+            displayElement.innerText = '0';
+            prevInputElement.innerText = '';
+            displayElement.classList.add('number-mode');
+            displayElement.classList.remove('text-mode');
+        }
+
+        function calculate(isIntermediate = false) {
+            let computation;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+            lastOpForContext = operator;
+            lastOperandForContext = current;
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operator) {
+                case '+': computation = prev + current; break;
+                case '-': computation = prev - current; break;
+                case '*': computation = prev * current; break;
+                case '/': computation = current === 0 ? "Infinity" : prev / current; break;
+                case '%': computation = prev % current; break;
+                default: return;
+            }
+
+            currentInput = computation;
+            operator = undefined;
+            previousInput = '';
+            resetScreen = true;
+            
+            if (isIntermediate) updateDisplay(false);
+            else updateDisplay(isGirlMath); 
+        }
+
+        function updateDisplay(showGirlMathText) {
+            if (operator != null) {
+                prevInputElement.innerText = `${previousInput} ${operator}`;
+            } else {
+                prevInputElement.innerText = '';
+            }
+
+            if (showGirlMathText) {
+                const funnyText = getGirlMathTranslation(currentInput, lastOpForContext, lastOperandForContext);
+                displayElement.classList.remove('number-mode');
+                displayElement.classList.add('text-mode');
+                displayElement.classList.remove('fade-in');
+                void displayElement.offsetWidth;
+                displayElement.innerText = funnyText;
+                displayElement.classList.add('fade-in');
+            } else {
+                displayElement.classList.add('number-mode');
+                displayElement.classList.remove('text-mode');
+                displayElement.innerText = currentInput === '' ? '0' : currentInput;
+            }
+        }
+
+        function getGirlMathTranslation(result, op, operand) {
+            const r = parseFloat(result);
+            if (result === "Infinity" || result === Infinity) return "Undefined, just like my situationship 💔";
+            if (r === 0) return "Literally free ✨";
+            if (r < 0) return "You made a profit! 🤑";
+            if (op === '/' && r > 0 && r < 100) return "It counts as free if we split it 👯‍♀️";
+            if (op === '-' && r > 0 && Math.random() > 0.5) return "Money saved = Money earned 🧠";
+            if (op === '*' && operand > 1 && r > 50 && Math.random() > 0.6) return "Buying in bulk is financially responsible 📉";
+            if (r === 69) return "Nice. 😏";
+            if (r === 420) return "Blaze it 🔥";
+            if (r === 666) return "Spooky vibes 👻";
+            if (r > 0 && r < 5) return "Basically free 💅";
+            if (r >= 5 && r < 20) return "Coffee money ☕";
+            if (r >= 20 && r < 50) return "Girl dinner price 🥗";
+            if (r >= 50 && r < 100) return "Treat yourself 🛍️";
+            if (r >= 100 && r < 300) return "Investment piece 👜";
+            if (r >= 300 && r < 1000) return "Self-care essential 💆‍♀️";
+            if (r >= 1000) return "Generational wealth 💸";
+            return r;
+        }
+    </script>
+</body>
+</html>
+

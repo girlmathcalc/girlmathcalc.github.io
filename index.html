@@ -78,7 +78,15 @@
     <script>
         // Array of your repository web pages with image URLs
         const repos = [
-            // Project 1: Poker Rogue (New top position)
+            // NEW Project 4: Blackjack 21 (Added to the top)
+            { 
+                name: "Blackjack 21", 
+                description: "Single-player Blackjack against a dealer with twists.", 
+                url: "https://almondbyte.github.io/blackjack21/", 
+                // Using the specific icon URL from the repo's main branch
+                icon: "https://raw.githubusercontent.com/almondbyte/blackjack21/refs/heads/main/icon-192.png" 
+            },
+            // Project 1: Poker Rogue (Moved to second position)
             { 
                 name: "Poker Rogue", 
                 description: "mom: we have balatro at home. the balatro at home:", 
@@ -88,14 +96,14 @@
             // Project 2: Low Poly World (Middle position)
             { 
                 name: "Almond's Low Poly World", 
-                description: "An interactive, low-polygon 3D environment and game prototype.", 
+                description: "A low-polygon 3D simulation of my cat Almond.", 
                 url: "https://almondbyte.github.io/almond/", 
                 icon: "https://raw.githubusercontent.com/almondbyte/almond/refs/heads/main/icon-192.png"
             },
             // Project 3: Girl Math Calculator (New bottom position)
             { 
                 name: "Girl Math Calculator", 
-                description: "A fun, responsive calculator built on viral 'girl math' financial logic.", 
+                description: "A calculator built on girl math.", 
                 url: "https://almondbyte.github.io/girlmath/", 
                 icon: "https://raw.githubusercontent.com/almondbyte/girlmath/refs/heads/main/icon-192.png"
             },
@@ -132,6 +140,8 @@
 
         // Loop through the data and create cards
         window.onload = () => {
+            // Clear existing content just in case, though usually not needed with window.onload
+            container.innerHTML = ''; 
             repos.forEach(createRepoCard);
         };
     </script>

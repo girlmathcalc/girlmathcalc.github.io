@@ -1,0 +1,367 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>6.13.2013</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Montserrat:wght@300;400&display=swap');
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #2f9e66; /* Fallback Sage */
+            touch-action: none;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* Center alignment for the intro text */
+        .center-content {
+            justify-content: center;
+        }
+
+        /* Top alignment for the message card */
+        .top-content {
+            justify-content: flex-start;
+            padding-top: 10vh; /* Push down slightly from very top */
+        }
+
+        .fade-in {
+            animation: fadeIn 2s ease-in forwards;
+        }
+
+        .fade-out {
+            animation: fadeOut 1s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25); /* Slightly more opaque for green bg */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-start infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="flowerCanvas"></canvas>
+
+    <!-- UI Layer -->
+    <!-- We start centered for the intro -->
+    <div id="ui-layer" class="center-content">
+        
+        <!-- Step 1: Intro (Centered) -->
+        <div id="intro-text" class="text-center pointer-events-auto cursor-pointer p-10">
+            <h1 class="text-white text-4xl md:text-6xl font-light tracking-widest font-['Montserrat'] mb-4 drop-shadow-md">
+                Compassion
+            </h1>
+            <p class="text-green-50 text-base md:text-lg animate-pulse tracking-widest font-light drop-shadow-sm">
+                tap anywhere
+            </p>
+        </div>
+
+        <!-- Step 2: Message Card (Positioned at top via CSS class change) -->
+        <!-- Added absolute positioning utility to ensure it sits high up -->
+        <div id="message-card" class="hidden glass-card p-6 rounded-2xl max-w-xs md:max-w-md text-center pointer-events-auto transform transition-all duration-1000 absolute top-[12%]">
+            <h2 class="text-3xl text-white font-['Dancing_Script'] font-bold mb-2 drop-shadow-sm">6.3.2013</h2>
+            <p id="typed-message" class="text-white font-['Montserrat'] text-sm font-medium leading-relaxed min-h-[40px] drop-shadow-sm"></p>
+            <!-- Replay button removed -->
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('flowerCanvas');
+        const ctx = canvas.getContext('2d');
+        const uiLayer = document.getElementById('ui-layer');
+        const introText = document.getElementById('intro-text');
+        const messageCard = document.getElementById('message-card');
+        const typedMessageElement = document.getElementById('typed-message');
+
+        let width, height;
+        let particles = [];
+        let flowerState = 'seed'; 
+        let growProgress = 0;
+        let bloomProgress = 0;
+        let time = 0;
+
+        // Configuration
+        const FLOWER_COLOR_BASE = { h: 345, s: 85, l: 60 }; // Vibrant Pink/Rose
+        const STEM_COLOR = '#1a3c15'; // Darker green stem for contrast
+        const FINAL_MESSAGE = "Just like a flower\nBeautiful things take time to bloom\nAnd every time we kiss\nI'm reminded how grateful\nI am to have you\n⋆⁺｡˚⋆˙‧₊☽ ❤︎ ☾₊‧˙⋆˚｡⁺⋆\nThank you for being mine";
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.init();
+            }
+
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.size = Math.random() * 3 + 0.5; // Slightly larger
+                this.speedY = Math.random() * -0.5 - 0.1;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.4 + 0.1;
+                // White/Gold particles suit sage green better
+                this.color = `hsla(${Math.random() * 40 + 40}, 100%, 90%,`; 
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX + Math.sin(time * 0.01 + this.y * 0.01) * 0.2;
+                
+                if (this.y < -10) this.y = height + 10;
+                if (this.x < -10) this.x = width + 10;
+                if (this.x > width + 10) this.x = -10;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.opacity + ')';
+                ctx.fill();
+            }
+        }
+
+        for(let i = 0; i < 50; i++) {
+            particles.push(new Particle());
+        }
+
+        document.addEventListener('click', handleInteraction);
+        document.addEventListener('touchstart', handleInteraction, {passive: false});
+
+        function handleInteraction(e) {
+            if (flowerState === 'seed') {
+                if(e.type === 'touchstart') e.preventDefault();
+                
+                flowerState = 'growing';
+                introText.classList.add('fade-out');
+                
+                // Switch UI layout mode logic not needed due to absolute positioning,
+                // but we hide the intro text
+                setTimeout(() => {
+                    introText.style.display = 'none';
+                }, 1000);
+            }
+        }
+
+        function drawStem(progress) {
+            const startX = width / 2;
+            const startY = height;
+            const endX = width / 2;
+            // Flower head position
+            const endY = height / 2 + 100; // Move flower slightly lower to clear top space
+
+            const currentY = startY - (startY - endY) * progress;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            
+            const cp1x = startX + Math.sin(time * 0.005) * 20 * progress;
+            const cp1y = startY - (startY - endY) * 0.5;
+            
+            ctx.quadraticCurveTo(cp1x, cp1y, endX, currentY);
+            
+            ctx.strokeStyle = STEM_COLOR;
+            ctx.lineWidth = 5 * (1 - (currentY/height) * 0.5);
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            if(progress > 0.5) {
+                const leafScale = (progress - 0.5) * 2.5;
+                drawLeaf(width/2, height * 0.8, -1, leafScale);
+                drawLeaf(width/2, height * 0.9, 1, leafScale);
+            }
+        }
+
+        function drawLeaf(x, y, dir, scale) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale * dir, scale);
+            ctx.rotate(-0.5 + Math.sin(time * 0.002) * 0.1);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(30, -10, 40, -30, 0, -60);
+            ctx.bezierCurveTo(-40, -30, -30, -10, 0, 0);
+            
+            // Dark green leaf
+            ctx.fillStyle = '#2d4a29'; 
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function drawPetal(r, theta, color, scale, phase) {
+            ctx.save();
+            // Center position: height/2 + 100
+            ctx.translate(width/2, height/2 + 100 - (growProgress * 50));
+            ctx.rotate(theta);
+            ctx.scale(scale, scale);
+
+            ctx.beginPath();
+            const wobble = Math.sin(time * 0.002 + phase) * 5;
+
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(30 + wobble, -30, 60, -80, 0, -100);
+            ctx.bezierCurveTo(-60, -80, -30 - wobble, -30, 0, 0);
+
+            let gradient = ctx.createLinearGradient(0, 0, 0, -100);
+            gradient.addColorStop(0, `hsl(${color.h - 10}, ${color.s}%, 30%)`);
+            gradient.addColorStop(0.4, `hsl(${color.h}, ${color.s}%, ${color.l}%)`);
+            gradient.addColorStop(1, `hsl(${color.h + 10}, ${color.s}%, ${color.l + 25}%)`);
+
+            ctx.fillStyle = gradient;
+            ctx.shadowColor = `rgba(0,0,0,0.1)`; // Subtler shadow for bright day theme
+            ctx.shadowBlur = 5;
+            ctx.fill();
+            
+            ctx.strokeStyle = `rgba(255,255,255,0.2)`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawFlower() {
+            const goldenAngle = 137.508 * (Math.PI / 180);
+            const petalCount = 30;
+
+            for (let i = petalCount; i > 0; i--) {
+                const normalizedIndex = i / petalCount;
+                let layerOpenness = (bloomProgress * 1.5) - (1 - normalizedIndex) * 0.5;
+                layerOpenness = Math.max(0, Math.min(1, layerOpenness));
+
+                const r = 3 * Math.sqrt(i) * layerOpenness * 5; 
+                const theta = i * goldenAngle + time * 0.001;
+                
+                const scale = (0.2 + (normalizedIndex * 0.8)) * layerOpenness;
+
+                if (scale > 0.01) {
+                    const colorVar = {
+                        h: FLOWER_COLOR_BASE.h + (i * 1.5),
+                        s: FLOWER_COLOR_BASE.s,
+                        l: FLOWER_COLOR_BASE.l
+                    };
+                    drawPetal(r, theta, colorVar, scale, i);
+                }
+            }
+        }
+
+        function typeWriter(text, i) {
+            if (i < text.length) {
+                typedMessageElement.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                setTimeout(() => typeWriter(text, i + 1), 50);
+            } else {
+                typedMessageElement.classList.remove('typing-cursor');
+            }
+        }
+
+        function showMessage() {
+            if (flowerState === 'finished') return;
+            flowerState = 'finished';
+            messageCard.classList.remove('hidden');
+            messageCard.classList.add('fade-in');
+            
+            setTimeout(() => {
+                typedMessageElement.innerHTML = '';
+                typedMessageElement.classList.add('typing-cursor');
+                typeWriter(FINAL_MESSAGE, 0);
+            }, 1000);
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            time++;
+
+            // 1. Sage Green Gradient Background
+            const gradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, height);
+            // Light sage center to darker earthy green edge
+            gradient.addColorStop(0, '#5dad6e'); 
+            gradient.addColorStop(1, '#77c688');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // 3. Logic
+            if (flowerState === 'growing') {
+                if (growProgress < 1) {
+                    growProgress += 0.01;
+                } else {
+                    flowerState = 'blooming';
+                }
+            } else if (flowerState === 'blooming' || flowerState === 'finished') {
+                growProgress = 1;
+                if (bloomProgress < 1) {
+                    bloomProgress += 0.005;
+                } else if (flowerState !== 'finished') {
+                    showMessage();
+                }
+            }
+
+            // 4. Draw Plant
+            if (flowerState !== 'seed') {
+                drawStem(growProgress);
+                if (growProgress > 0.5) {
+                    drawFlower();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
+
